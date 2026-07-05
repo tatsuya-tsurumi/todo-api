@@ -34,7 +34,14 @@ var todos = new List<TodoModel>
     }
 };
 
-app.MapGet("/todos", () => todos)
-    .WithName("GetTodos");
+app.MapGet("/todos/{id}", (int id) =>
+{
+    var todo = todos.FirstOrDefault(t => t.Id == id);
+
+    return todo is null ? Results.NotFound() : Results.Ok(todo);
+})
+    .WithName("GetTodoById")
+    .WithSummary("指定したIDのTodoを取得する")
+    .WithDescription("IDに一致するTodoを返却します。存在しない場合は404 Not Foundを返却します。");
 
 app.Run();
