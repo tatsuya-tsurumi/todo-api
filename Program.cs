@@ -96,4 +96,24 @@ app.MapPut("/todos/{id}", (int id, TodoModel request) =>
     .WithSummary("指定したIDのTodoを更新する")
     .WithDescription("IDに一致するTodoを更新します。存在しない場合は404 Not Foundを返却します。");
 
+// <summary>
+/// Todoを削除するAPI
+/// </summary>
+app.MapDelete("/todos/{id}", (int Id) =>
+{
+    var todo = todos.FirstOrDefault(t => t.Id == Id);
+
+    if (todo is null)
+    {
+        return Results.NotFound();
+    }
+
+    todos.Remove(todo);
+
+    return Results.NoContent();
+})
+    .WithName("DeleteTodo")
+    .WithSummary("指定したIDのTodoを削除する")
+    .WithDescription("IDに一致するTodoを削除します。存在しない場合は404 Not Foundを返却します。");
+
 app.Run();
