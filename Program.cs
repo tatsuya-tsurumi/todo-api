@@ -1,3 +1,5 @@
+using TodoApi.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -16,15 +18,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var todos = new List<object>
+var todos = new List<TodoModel>
 {
-    new
+    new()
     {
         Id = 1,
         Title = "ASP.NET Coreを勉強する",
         IsCompleted = false
     },
-    new
+    new()
     {
         Id = 2,
         Title = "Swaggerを確認する",
