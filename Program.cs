@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using todo_api.Data;
 using TodoApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<TodoDbContext>(options =>
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
 
 var app = builder.Build();
 
@@ -18,26 +26,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var todos = new List<TodoModel>
-{
-    new()
-    {
-        Id = 1,
-        Title = "ASP.NET Coreを勉強する",
-        IsCompleted = false
-    },
-    new()
-    {
-        Id = 2,
-        Title = "Swaggerを確認する",
-        IsCompleted = true
-    }
-};
-
 /// <summary>
 /// Todo一覧を取得するAPI
 /// </summary>
-app.MapGet("/todos", () => todos)
+app.MapGet("/todos", async (TodoDbContext db) =>
+{
+    return await db.Todos.ToListAsync();
+})
     .WithName("GetTodos")
     .WithSummary("Todo一覧を取得する")
     .WithDescription("登録されているTodo一覧を返却します。");
@@ -45,9 +40,9 @@ app.MapGet("/todos", () => todos)
 // <summary>
 /// 指定したTodoを取得するAPI
 /// </summary>
-app.MapGet("/todos/{id}", (int id) =>
+app.MapGet("/todos/{id}", async (int id, TodoDbContext db) =>
 {
-    var todo = todos.FirstOrDefault(t => t.Id == id);
+    var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == id);
 
     return todo is null ? Results.NotFound() : Results.Ok(todo);
 })
@@ -58,16 +53,12 @@ app.MapGet("/todos/{id}", (int id) =>
 // <summary>
 /// Todoを作成するAPI
 /// </summary>
-app.MapPost("/todos", (TodoModel todo) =>
+app.MapPost("/todos", async (TodoModel todo, TodoDbContext db) =>
 {
-    // todoのIDを生成
-    var newId = todos.Any() ? todos.Max(t => t.Id) + 1 : 1;
-
-    // todoに必要な情報を追記
-    todo.Id = newId;
     todo.CreatedAt = DateTime.UtcNow;
 
-    todos.Add(todo);
+    db.Todos.Add(todo);
+    await db.SaveChangesAsync();
 
     return Results.Created($"/todos/{todo.Id}", todo);
 })
@@ -78,9 +69,9 @@ app.MapPost("/todos", (TodoModel todo) =>
 // <summary>
 /// Todoを更新するAPI
 /// </summary>
-app.MapPut("/todos/{id}", (int id, TodoModel request) => 
+app.MapPut("/todos/{id}", async (int id, TodoModel request, TodoDbContext db) => 
 {
-    var todo = todos.FirstOrDefault(t => t.Id == id);
+    var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == id);
 
     if (todo is null)
     {
@@ -89,6 +80,8 @@ app.MapPut("/todos/{id}", (int id, TodoModel request) =>
 
     todo.Title = request.Title;
     todo.IsCompleted = request.IsCompleted;
+
+    await db.SaveChangesAsync();
 
     return Results.Ok(todo);
 })
@@ -99,21 +92,24 @@ app.MapPut("/todos/{id}", (int id, TodoModel request) =>
 // <summary>
 /// Todoを削除するAPI
 /// </summary>
-app.MapDelete("/todos/{id}", (int Id) =>
+app.MapDelete("/todos/{id}", async (int Id, TodoDbContext db) =>
 {
-    var todo = todos.FirstOrDefault(t => t.Id == Id);
+    var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == Id);
 
     if (todo is null)
     {
         return Results.NotFound();
     }
 
-    todos.Remove(todo);
+    db.Todos.Remove(todo);
+    await db.SaveChangesAsync();
 
     return Results.NoContent();
 })
     .WithName("DeleteTodo")
     .WithSummary("指定したIDのTodoを削除する")
     .WithDescription("IDに一致するTodoを削除します。存在しない場合は404 Not Foundを返却します。");
+
+
 
 app.Run();
