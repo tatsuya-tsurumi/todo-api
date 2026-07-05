@@ -34,6 +34,11 @@ var todos = new List<TodoModel>
     }
 };
 
+app.MapGet("/todos", () => todos)
+    .WithName("GetTodos")
+    .WithSummary("Todo一覧を取得する")
+    .WithDescription("登録されているTodo一覧を返却します。");
+
 app.MapGet("/todos/{id}", (int id) =>
 {
     var todo = todos.FirstOrDefault(t => t.Id == id);
@@ -43,5 +48,22 @@ app.MapGet("/todos/{id}", (int id) =>
     .WithName("GetTodoById")
     .WithSummary("指定したIDのTodoを取得する")
     .WithDescription("IDに一致するTodoを返却します。存在しない場合は404 Not Foundを返却します。");
+
+app.MapPost("/todos", (TodoModel todo) =>
+{
+    // todoのIDを生成
+    var newId = todos.Any() ? todos.Max(t => t.Id) + 1 : 1;
+
+    // todoに必要な情報を追記
+    todo.Id = newId;
+    todo.CreatedAt = DateTime.UtcNow;
+
+    todos.Add(todo);
+
+    return Results.Created($"/todos/{todo.Id}", todo);
+})
+    .WithName("CreateTodo")
+    .WithSummary("Todoを新規作成する")
+    .WithDescription("新しいTodoを登録し、作成したTodoを返却します。");
 
 app.Run();
