@@ -34,11 +34,17 @@ var todos = new List<TodoModel>
     }
 };
 
+/// <summary>
+/// Todo一覧を取得するAPI
+/// </summary>
 app.MapGet("/todos", () => todos)
     .WithName("GetTodos")
     .WithSummary("Todo一覧を取得する")
     .WithDescription("登録されているTodo一覧を返却します。");
 
+// <summary>
+/// 指定したTodoを取得するAPI
+/// </summary>
 app.MapGet("/todos/{id}", (int id) =>
 {
     var todo = todos.FirstOrDefault(t => t.Id == id);
@@ -49,6 +55,9 @@ app.MapGet("/todos/{id}", (int id) =>
     .WithSummary("指定したIDのTodoを取得する")
     .WithDescription("IDに一致するTodoを返却します。存在しない場合は404 Not Foundを返却します。");
 
+// <summary>
+/// Todoを作成するAPI
+/// </summary>
 app.MapPost("/todos", (TodoModel todo) =>
 {
     // todoのIDを生成
@@ -65,5 +74,26 @@ app.MapPost("/todos", (TodoModel todo) =>
     .WithName("CreateTodo")
     .WithSummary("Todoを新規作成する")
     .WithDescription("新しいTodoを登録し、作成したTodoを返却します。");
+
+// <summary>
+/// Todoを更新するAPI
+/// </summary>
+app.MapPut("/todos/{id}", (int id, TodoModel request) => 
+{
+    var todo = todos.FirstOrDefault(t => t.Id == id);
+
+    if (todo is null)
+    {
+        return Results.NotFound();
+    }
+
+    todo.Title = request.Title;
+    todo.IsCompleted = request.IsCompleted;
+
+    return Results.Ok(todo);
+})
+    .WithName("UpdateTodo")
+    .WithSummary("指定したIDのTodoを更新する")
+    .WithDescription("IDに一致するTodoを更新します。存在しない場合は404 Not Foundを返却します。");
 
 app.Run();
