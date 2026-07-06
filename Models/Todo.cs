@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TodoApi.Models;
 
 public class TodoModel
@@ -6,6 +8,8 @@ public class TodoModel
   public int Id { get; set; }
 
   /// <summary>タイトル</summary>
+  [Required]
+  [StringLength(100)]
   public string Title { get; set; } = string.Empty;
 
   /// <summary>todoが完了しているかどうか</summary>

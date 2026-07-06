@@ -1,5 +1,7 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Validation;
 using todo_api.Data;
 using TodoApi.Models;
 
@@ -55,6 +57,13 @@ app.MapGet("/todos/{id}", async (int id, TodoDbContext db) =>
 /// </summary>
 app.MapPost("/todos", async (TodoModel todo, TodoDbContext db) =>
 {
+    var errors = ValidateModel(todo);
+
+    if (errors is not null)
+    {
+        return Results.ValidationProblem(errors);
+    }
+    
     todo.CreatedAt = DateTime.UtcNow;
 
     db.Todos.Add(todo);
@@ -71,6 +80,13 @@ app.MapPost("/todos", async (TodoModel todo, TodoDbContext db) =>
 /// </summary>
 app.MapPut("/todos/{id}", async (int id, TodoModel request, TodoDbContext db) => 
 {
+    var errors = ValidateModel(request);
+
+    if (errors is not null)
+    {
+        return Results.ValidationProblem(errors);
+    }
+
     var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == id);
 
     if (todo is null)
@@ -113,3 +129,26 @@ app.MapDelete("/todos/{id}", async (int Id, TodoDbContext db) =>
 
 
 app.Run();
+
+static Dictionary<string, string[]>? ValidateModel<T>(T model)
+{
+    ArgumentNullException.ThrowIfNull(model);
+
+    var validationContext = new ValidationContext(model);
+    var validationResults = new List<ValidationResult>();
+
+    if (!Validator.TryValidateObject(
+        model,
+        validationContext,
+        validationResults,
+        validateAllProperties: true))
+    {
+        return null;
+    }
+        return validationResults
+            .GroupBy(v => v.MemberNames.FirstOrDefault() ?? "")
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(v => v.ErrorMessage ?? "").ToArray()
+            );
+}
