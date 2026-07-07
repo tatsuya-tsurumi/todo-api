@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Validation;
-using todo_api.Data;
+using TodoApi.Data;
+using TodoApi.Dtos;
+using TodoApi.Extensions;
 using TodoApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,7 +33,13 @@ app.UseHttpsRedirection();
 /// </summary>
 app.MapGet("/todos", async (TodoDbContext db) =>
 {
-    return await db.Todos.ToListAsync();
+    var todos = await db.Todos.ToListAsync();
+
+    var response = todos
+        .Select(todo => todo.ToResponse())
+        .ToList();
+
+    return response;
 })
     .WithName("GetTodos")
     .WithSummary("Todo一覧を取得する")
@@ -46,7 +52,11 @@ app.MapGet("/todos/{id}", async (int id, TodoDbContext db) =>
 {
     var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == id);
 
-    return todo is null ? Results.NotFound() : Results.Ok(todo);
+    if (todo is null){
+        return Results.NotFound();
+    }
+
+    return Results.Ok(todo.ToResponse());
 })
     .WithName("GetTodoById")
     .WithSummary("指定したIDのTodoを取得する")
@@ -55,21 +65,25 @@ app.MapGet("/todos/{id}", async (int id, TodoDbContext db) =>
 // <summary>
 /// Todoを作成するAPI
 /// </summary>
-app.MapPost("/todos", async (TodoModel todo, TodoDbContext db) =>
+app.MapPost("/todos", async (CreateTodoRequest request, TodoDbContext db) =>
 {
-    var errors = ValidateModel(todo);
+    var errors = ValidateModel(request);
 
     if (errors is not null)
     {
         return Results.ValidationProblem(errors);
     }
-    
-    todo.CreatedAt = DateTime.UtcNow;
 
+    var todo = new TodoModel
+    {
+        Title = request.Title,
+        IsCompleted = request.IsCompleted,
+        CreatedAt = DateTime.UtcNow
+    };
+    
     db.Todos.Add(todo);
     await db.SaveChangesAsync();
-
-    return Results.Created($"/todos/{todo.Id}", todo);
+    return Results.Created($"/todos/{todo.Id}", todo.ToResponse());
 })
     .WithName("CreateTodo")
     .WithSummary("Todoを新規作成する")
@@ -78,7 +92,7 @@ app.MapPost("/todos", async (TodoModel todo, TodoDbContext db) =>
 // <summary>
 /// Todoを更新するAPI
 /// </summary>
-app.MapPut("/todos/{id}", async (int id, TodoModel request, TodoDbContext db) => 
+app.MapPut("/todos/{id}", async (int id, UpdateTodoRequest request, TodoDbContext db) => 
 {
     var errors = ValidateModel(request);
 
@@ -99,7 +113,7 @@ app.MapPut("/todos/{id}", async (int id, TodoModel request, TodoDbContext db) =>
 
     await db.SaveChangesAsync();
 
-    return Results.Ok(todo);
+    return Results.Ok(todo.ToResponse());
 })
     .WithName("UpdateTodo")
     .WithSummary("指定したIDのTodoを更新する")
@@ -143,12 +157,12 @@ static Dictionary<string, string[]>? ValidateModel<T>(T model)
         validationResults,
         validateAllProperties: true))
     {
-        return null;
-    }
         return validationResults
             .GroupBy(v => v.MemberNames.FirstOrDefault() ?? "")
             .ToDictionary(
                 g => g.Key,
                 g => g.Select(v => v.ErrorMessage ?? "").ToArray()
             );
+    }
+    return null;
 }

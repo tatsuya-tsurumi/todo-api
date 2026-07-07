@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Models;
 
-namespace todo_api.Data;
+namespace TodoApi.Data;
 
 /// <summary>
 /// TodoアプリのDBコンテキスト
