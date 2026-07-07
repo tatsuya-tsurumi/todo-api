@@ -1,8 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+namespace TodoApi.Dtos;
 
-namespace TodoApi.Models;
-
-public class TodoModel
+public class TodoResponse
 {
   /// <summary>todoを識別するID</summary>
   public int Id { get; set; }
@@ -14,5 +12,5 @@ public class TodoModel
   public bool IsCompleted { get; set; }
 
   /// <summary>作成日</summary>
-  public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+  public DateTime CreatedAt { get; set; }
 }

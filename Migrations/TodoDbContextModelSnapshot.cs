@@ -3,11 +3,11 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using todo_api.Data;
+using TodoApi.Data;
 
 #nullable disable
 
-namespace todo_api.Migrations
+namespace TodoApi.Migrations
 {
     [DbContext(typeof(TodoDbContext))]
     partial class TodoDbContextModelSnapshot : ModelSnapshot
