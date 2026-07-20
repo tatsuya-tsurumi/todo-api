@@ -1,36 +1,33 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
 using TodoApi.Dtos;
 using TodoApi.Extensions;
 using TodoApi.Models;
+using TodoApi.Repositories;
 
 namespace TodoApi.Services
 {
     public class TodoService : ITodoService
     {
         private readonly TodoDbContext _context;
+        private readonly ITodoRepository _repository;
 
-        public TodoService(TodoDbContext context)
+        public TodoService(TodoDbContext context, ITodoRepository repository)
         {
             _context = context;
+            _repository = repository;
         }
 
         // todo一覧取得
         public async Task<IEnumerable<TodoResponse>> GetTodosAsync()
         {
-            return await _context.Todos
-                .Select(todo => todo.ToResponse())
-                .ToListAsync();
+            var todos = await _repository.GetTodosAsync();
+            return todos.Select(todo => todo.ToResponse());
         }
 
         // 特定のtodo取得
         public async Task<TodoResponse?> GetTodoByIdAsync(int id)
         {
-            var todo = await _context.Todos.FindAsync(id);
+            var todo = await _repository.GetTodoByIdAsnync(id);
             if (todo is null)
             {
                 return null;
@@ -49,8 +46,7 @@ namespace TodoApi.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Todos.Add(todo);
-            await _context.SaveChangesAsync();
+            await _repository.AddTodoAsync(todo);
 
             return todo.ToResponse();
         }
@@ -58,7 +54,7 @@ namespace TodoApi.Services
         // todoの更新
         public async Task<TodoResponse?> UpdateTodoAsync(int id, UpdateTodoRequest request)
         {
-            var todo = await _context.Todos.FindAsync(id);
+            var todo = await _repository.GetTodoByIdAsnync(id);
 
             if (todo is null)
             {
@@ -68,7 +64,7 @@ namespace TodoApi.Services
             todo.Title = request.Title;
             todo.IsCompleted = request.IsCompleted;
 
-            await _context.SaveChangesAsync();
+            await _repository.UpdateTodoAsync(todo);
 
             return todo.ToResponse();
         } 
@@ -83,8 +79,7 @@ namespace TodoApi.Services
                 return false;
             }
 
-            _context.Todos.Remove(todo);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteTodoAsync(todo);
 
             return true;
 
