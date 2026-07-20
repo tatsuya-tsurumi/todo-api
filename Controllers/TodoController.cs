@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
 using TodoApi.Dtos;
 using TodoApi.Extensions;
-using TodoApi.Helpers;
 using TodoApi.Models;
+using TodoApi.Services;
 
 namespace TodoApi.Controllers;
 
@@ -12,11 +12,11 @@ namespace TodoApi.Controllers;
 [Route("api/[controller]")]
 public class TodoController : ControllerBase
 {
-  private readonly TodoDbContext _context;
+  private readonly ITodoService _todoService;
 
-  public TodoController(TodoDbContext context)
+  public TodoController(ITodoService todoService)
   {
-    _context = context;
+    _todoService = todoService;
   }
 
   /// <summary>
@@ -25,10 +25,9 @@ public class TodoController : ControllerBase
   [HttpGet]
   public async Task<ActionResult<IEnumerable<TodoResponse>>> GetTodos()
   {
-    var todos = await _context.Todos.ToListAsync();
-    var response = todos.Select(todo => todo.ToResponse());
+    var todos = await _todoService.GetTodosAsync();
 
-    return Ok(response);
+    return Ok(todos);
   }
 
   /// <summary>
@@ -37,7 +36,7 @@ public class TodoController : ControllerBase
   [HttpGet("{id}")]
   public async Task<ActionResult<TodoResponse>> GetTodo(int id)
   {
-    var todo = await _context.Todos.FirstOrDefaultAsync(t => t.Id == id);
+    var todo = await _todoService.GetTodoByIdAsync(id);
 
     if (todo is null)
     {
@@ -53,17 +52,13 @@ public class TodoController : ControllerBase
   [HttpPost]
   public async Task<ActionResult<TodoResponse>> CreateTodo([FromBody] CreateTodoRequest request)
   {
-    var todo = new TodoModel
-    {
-      Title = request.Title,
-      IsCompleted = request.IsCompleted,
-      CreatedAt = DateTime.UtcNow
-    };
+    var todo = _todoService.CreateTodoAsync(request);
 
-    _context.Todos.Add(todo);
-    await _context.SaveChangesAsync();
-
-    return CreatedAtAction(nameof(GetTodo), new {id = todo.Id}, todo.ToResponse());
+    return CreatedAtAction(
+      nameof(GetTodo), 
+      new {id = todo.Id}, 
+      todo
+    );
   }
 
   // <summary>
@@ -74,35 +69,28 @@ public class TodoController : ControllerBase
     int id,
     [FromBody] UpdateTodoRequest request)
   {
-    var todo = await _context.Todos.FindAsync(id);
+    var todo = await _todoService.UpdateTodoAsync(id, request);
 
     if (todo is null)
     {
       return NotFound();
     }
 
-    todo.Title = request.Title;
-    todo.IsCompleted = request.IsCompleted;
-    await _context.SaveChangesAsync();
-
-    return Ok(todo.ToResponse());
+    return Ok(todo);
   }
 
   // <summary>
   /// Todoを削除
   /// </summary>
   [HttpDelete("{id}")]
-  public async Task<IActionResult> DeletTodo(int id)
+  public async Task<IActionResult> DeleteTodo(int id)
   {
-    var todo = await _context.Todos.FindAsync(id);
+    var result = await _todoService.DeleteTodoAsync(id);
 
-    if (todo is null)
+    if (!result)
     {
       return NotFound();
     }
-
-    _context.Todos.Remove(todo);
-    await _context.SaveChangesAsync();
 
     return NoContent();
   }
