@@ -72,9 +72,9 @@ namespace TodoApi.Services
         // todoを削除
         public async Task<bool> DeleteTodoAsync(int id)
         {
-            var todo = await _context.Todos.FindAsync(id);
+            var todo = await _repository.GetTodoByIdAsnync(id);
 
-            if (todo is null)
+            if(todo is null)
             {
                 return false;
             }
@@ -82,7 +82,6 @@ namespace TodoApi.Services
             await _repository.DeleteTodoAsync(todo);
 
             return true;
-
         }
     }
 }
