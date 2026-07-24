@@ -8,12 +8,10 @@ namespace TodoApi.Services
 {
     public class TodoService : ITodoService
     {
-        private readonly TodoDbContext _context;
         private readonly ITodoRepository _repository;
 
-        public TodoService(TodoDbContext context, ITodoRepository repository)
+        public TodoService(TodoRepository repository)
         {
-            _context = context;
             _repository = repository;
         }
 
