@@ -8,12 +8,10 @@ namespace TodoApi.Services
 {
     public class TodoService : ITodoService
     {
-        private readonly TodoDbContext _context;
         private readonly ITodoRepository _repository;
 
-        public TodoService(TodoDbContext context, ITodoRepository repository)
+        public TodoService(ITodoRepository repository)
         {
-            _context = context;
             _repository = repository;
         }
 
@@ -27,7 +25,7 @@ namespace TodoApi.Services
         // 特定のtodo取得
         public async Task<TodoResponse?> GetTodoByIdAsync(int id)
         {
-            var todo = await _repository.GetTodoByIdAsnync(id);
+            var todo = await _repository.GetTodoByIdAsync(id);
             if (todo is null)
             {
                 return null;
@@ -43,7 +41,7 @@ namespace TodoApi.Services
             {
                 Title = request.Title,
                 IsCompleted = request.IsCompleted,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             await _repository.AddTodoAsync(todo);
@@ -54,7 +52,7 @@ namespace TodoApi.Services
         // todoの更新
         public async Task<TodoResponse?> UpdateTodoAsync(int id, UpdateTodoRequest request)
         {
-            var todo = await _repository.GetTodoByIdAsnync(id);
+            var todo = await _repository.GetTodoByIdAsync(id);
 
             if (todo is null)
             {
@@ -72,7 +70,7 @@ namespace TodoApi.Services
         // todoを削除
         public async Task<bool> DeleteTodoAsync(int id)
         {
-            var todo = await _context.Todos.FindAsync(id);
+            var todo = await _repository.GetTodoByIdAsync(id);
 
             if (todo is null)
             {

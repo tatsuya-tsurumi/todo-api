@@ -7,7 +7,7 @@ namespace TodoApi.Repositories
     {
         Task<IEnumerable<TodoModel>> GetTodosAsync(); 
 
-        Task<TodoModel?> GetTodoByIdAsnync(int id);
+        Task<TodoModel?> GetTodoByIdAsync(int id);
 
         Task AddTodoAsync(TodoModel todo);
 
