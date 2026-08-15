@@ -72,7 +72,7 @@ namespace TodoApi.Services
         {
             var todo = await _repository.GetTodoByIdAsync(id);
 
-            if (todo is null)
+            if(todo is null)
             {
                 return false;
             }
@@ -80,7 +80,6 @@ namespace TodoApi.Services
             await _repository.DeleteTodoAsync(todo);
 
             return true;
-
         }
     }
 }
