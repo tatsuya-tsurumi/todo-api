@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <PreferredUILang>ja</PreferredUILang>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>TodoApi</RootNamespace>
@@ -15,6 +16,12 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="TodoApi.Tests/**/*.cs" />
+    <EmbeddedResource Remove="TodoApi.Tests/**" />
+    <None Remove="TodoApi.Tests/**" />
   </ItemGroup>
 
 </Project>

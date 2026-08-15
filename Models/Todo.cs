@@ -14,5 +14,5 @@ public class TodoModel
   public bool IsCompleted { get; set; }
 
   /// <summary>作成日</summary>
-  public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+  public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

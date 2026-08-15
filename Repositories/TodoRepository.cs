@@ -18,7 +18,7 @@ namespace TodoApi.Repositories
             return await _context.Todos.ToListAsync();
         }
 
-        public async Task<TodoModel?> GetTodoByIdAsnync(int id)
+        public async Task<TodoModel?> GetTodoByIdAsync(int id)
         {
             return await _context.Todos.FindAsync(id);
         }
